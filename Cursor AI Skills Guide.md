@@ -1,0 +1,878 @@
+# Cursor AI Skills Guide
+
+A comprehensive guide for creating and using AI-powered skills (agents) in Cursor IDE to automate repetitive development tasks.
+
+---
+
+## Table of Contents
+
+1. [What are Cursor Skills?](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+2. [How Skills Work](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+3. [Creating Your First Skill](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+4. [Skill File Structure](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+5. [Writing Effective Skills](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+6. [Using Skills](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+7. [Examples by Role](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+    - [Frontend Developer](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+    - [Backend Developer](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+    - [DevOps Engineer](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+    - [QA/Tester](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+8. [Best Practices](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+9. [Troubleshooting](https://www.notion.so/Cursor-AI-Skills-Guide-333f07f76dca80aab7bbda674df788c2?pvs=21)
+
+---
+
+## What are Cursor Skills?
+
+Skills are markdown instruction files that teach Cursor’s AI agent how to perform specific, repeatable tasks. Think of them as “recipes” that the AI follows to complete complex workflows consistently.
+
+### Benefits
+
+| Benefit | Description |
+| --- | --- |
+| **Automation** | Automate repetitive tasks like generating tests, documentation, or boilerplate |
+| **Consistency** | Ensure team-wide standards are followed every time |
+| **Knowledge Capture** | Document tribal knowledge and best practices in executable form |
+| **Time Savings** | Reduce manual effort on routine development tasks |
+| **Onboarding** | Help new team members follow established patterns automatically |
+
+---
+
+## How Skills Work
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   User Request  │────▶│  Cursor AI Agent │────▶│  Skill File     │
+│  "Write tests"  │     │  Matches Request │     │  (SKILL.md)     │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+                                                          │
+                                                          ▼
+                                                 ┌─────────────────┐
+                                                 │  AI Executes    │
+                                                 │  Instructions   │
+                                                 └─────────────────┘
+                                                          │
+                                                          ▼
+                                                 ┌─────────────────┐
+                                                 │  Generated      │
+                                                 │  Output/Code    │
+                                                 └─────────────────┘
+```
+
+1. **User triggers** the skill via natural language or explicit request
+2. **Cursor AI matches** the request to an available skill based on the description
+3. **AI reads** the SKILL.md file and follows the instructions
+4. **AI executes** the workflow (reading files, running commands, generating code)
+5. **Output delivered** - files created, code generated, tasks completed
+
+---
+
+## Creating Your First Skill
+
+### Step 1: Create the Skill Directory
+
+Skills can be stored in two locations:
+
+| Location | Path | Scope |
+| --- | --- | --- |
+| **Project** | `.cursor/skills/skill-name/` | Shared with repository (team-wide) |
+| **Personal** | `~/.cursor/skills/skill-name/` | Only available to you |
+
+```bash
+# For a project skill (recommended for team sharing)
+mkdir -p .cursor/skills/my-skill-name
+
+# For a personal skill
+mkdir -p ~/.cursor/skills/my-skill-name
+```
+
+### Step 2: Create SKILL.md
+
+Every skill requires a `SKILL.md` file with YAML frontmatter:
+
+```markdown
+---
+name: my-skill-name
+description: Brief description of what this skill does. Use when [trigger scenarios].
+---
+
+# Skill Title
+
+## Instructions
+
+Step-by-step guidance for the AI to follow.
+
+## Examples
+
+Concrete examples of inputs and expected outputs.
+```
+
+### Step 3: Test Your Skill
+
+Open Cursor and ask the AI to perform a task matching your skill’s description. The AI should automatically pick up and follow your skill.
+
+---
+
+## Skill File Structure
+
+```
+skill-name/
+├── SKILL.md              # Required - main instructions
+├── reference.md          # Optional - detailed documentation
+├── examples.md           # Optional - usage examples
+├── templates/            # Optional - template files
+│   └── component.ts.tpl
+└── scripts/              # Optional - utility scripts
+    └── validate.sh
+```
+
+### SKILL.md Required Fields
+
+| Field | Requirements | Example |
+| --- | --- | --- |
+| `name` | Lowercase, hyphens, max 64 chars | `generate-api-client` |
+| `description` | Max 1024 chars, includes trigger words | `Generate TypeScript API clients from OpenAPI specs. Use when creating API integrations or updating client code.` |
+
+---
+
+## Writing Effective Skills
+
+### Description Best Practices
+
+The description determines when the AI uses your skill. Make it specific:
+
+```yaml
+# ❌ Bad - too vague
+description: Helps with testing
+
+# ✅ Good - specific with trigger terms
+description: Generate Jest unit tests for Angular components, services, and pipes based on git branch changes. Use when writing tests, creating specs, or testing new features.
+```
+
+### Instruction Clarity
+
+```markdown
+# ❌ Bad - ambiguous
+Create tests for the code.
+
+# ✅ Good - clear steps
+## Workflow
+
+1.Run `git diff --name-only` to identify changed files
+2.For each `.ts` file (excluding `.spec.ts`):
+   a. Read the file contents
+   b. Identify public methods and dependencies
+   c. Generate test file at `<filename>.spec.ts`
+3.Run `npx nx test` to verify tests pass
+```
+
+### Keep It Concise
+
+- Main SKILL.md should be under 500 lines
+- Use reference files for detailed documentation
+- The AI is smart - don’t over-explain obvious concepts
+
+---
+
+## Using Skills
+
+### Natural Language Triggers
+
+Simply describe what you want. The AI matches your request to available skills:
+
+```
+"Write unit tests for my changes"
+"Generate API documentation"
+"Create a new component following our patterns"
+"Review this PR for security issues"
+```
+
+### Explicit Invocation
+
+You can also explicitly request a skill:
+
+```
+"Use the write-jest-unit-test skill"
+"Run the generate-component skill for UserProfile"
+```
+
+### Skill Discovery
+
+Ask Cursor: “What skills are available?” to see all registered skills.
+
+---
+
+## Examples by Role
+
+---
+
+### Frontend Developer Examples
+
+### 1. Component Generator Skill
+
+**Purpose:** Generate Angular/React components following team standards.
+
+```markdown
+---
+name: generate-component
+description: Generate Angular components with proper structure, styles, and tests. Use when creating new components, UI elements, or feature modules.
+---
+
+# Component Generator
+
+## Workflow
+
+1.Ask for component name and type (smart/presentational)
+2.Determine the target directory based on feature area
+3.Generate files:
+   -`component-name.component.ts`
+   -`component-name.component.html`
+   -`component-name.component.scss`
+   -`component-name.component.spec.ts`
+4.Add to nearest module's declarations
+
+## Component Template
+
+\`\`\`typescript
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+
+@Component({
+  selector: 'bb-{{kebab-name}}',
+  templateUrl: './{{kebab-name}}.component.html',
+  styleUrls: ['./{{kebab-name}}.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class {{PascalName}}Component {
+  @Input() data: unknown;
+  @Output() action = new EventEmitter<void>();
+}
+\`\`\`
+
+## Naming Conventions
+
+-Selector prefix: `bb-`
+-File names: kebab-case
+-Class names: PascalCase
+```
+
+### 2. CSS/SCSS Audit Skill
+
+**Purpose:** Review styles for consistency and performance.
+
+```markdown
+---
+name: scss-audit
+description: Audit SCSS files for best practices, unused variables, and consistency issues. Use when reviewing styles, optimizing CSS, or checking design system compliance.
+---
+
+# SCSS Audit
+
+## Checklist
+
+-[ ] Uses design system variables (not hardcoded colors/spacing)
+-[ ] No `!important` declarations
+-[ ] BEM naming convention followed
+-[ ] No deep nesting (max 3 levels)
+-[ ] Responsive breakpoints use mixins
+-[ ] No duplicate selectors
+
+## Audit Process
+
+1.Read the SCSS file
+2.Check each rule against the checklist
+3.Report issues with line numbers
+4.Suggest fixes using design tokens
+```
+
+### 3. Accessibility Checker Skill
+
+```markdown
+---
+name: a11y-check
+description: Check components for accessibility compliance. Use when reviewing UI components, fixing accessibility issues, or ensuring WCAG compliance.
+---
+
+# Accessibility Checker
+
+## Checks
+
+1.**Images**: All `<img>` have `alt` attributes
+2.**Forms**: Labels associated with inputs
+3.**Buttons**: Have accessible names
+4.**Color contrast**: Text meets WCAG AA
+5.**Focus management**: Interactive elements focusable
+6.**ARIA**: Proper ARIA attributes when needed
+
+## Output Format
+
+| Element | Issue | Severity | Fix |
+|---------|-------|----------|-----|
+| Line 15 | Missing alt | Critical | Add descriptive alt text |
+```
+
+---
+
+### Backend Developer Examples
+
+### 1. API Endpoint Generator Skill
+
+```markdown
+---
+name: generate-api-endpoint
+description: Generate REST API endpoints with controller, service, DTOs, and tests. Use when creating new API routes, endpoints, or backend features.
+---
+
+# API Endpoint Generator
+
+## Input Required
+
+-Resource name (e.g., "User", "Order")
+-HTTP methods needed (GET, POST, PUT, DELETE)
+-Request/Response fields
+
+## Generated Files
+
+1.`controller.ts` - Route handlers
+2.`service.ts` - Business logic
+3.`dto/request.dto.ts` - Input validation
+4.`dto/response.dto.ts` - Output schema
+5.`controller.spec.ts` - Unit tests
+6.`service.spec.ts` - Service tests
+
+## Controller Template
+
+\`\`\`typescript
+@Controller('{{kebab-name}}')
+export class {{PascalName}}Controller {
+  constructor(private readonly service: {{PascalName}}Service) {}
+
+  @Get()
+  async findAll(): Promise<{{PascalName}}Response[]> {
+    return this.service.findAll();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<{{PascalName}}Response> {
+    return this.service.findOne(id);
+  }
+
+  @Post()
+  async create(@Body() dto: Create{{PascalName}}Dto): Promise<{{PascalName}}Response> {
+    return this.service.create(dto);
+  }
+}
+\`\`\`
+```
+
+### 2. Database Migration Skill
+
+```markdown
+---
+name: generate-migration
+description: Generate database migrations for schema changes. Use when adding tables, columns, indexes, or modifying database schema.
+---
+
+# Database Migration Generator
+
+## Workflow
+
+1.Analyze requested schema change
+2.Generate migration file with timestamp
+3.Include both `up` and `down` methods
+4.Add data migration if needed
+
+## Migration Template
+
+\`\`\`typescript
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+
+export class {{MigrationName}}{{Timestamp}} implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable(
+      new Table({
+        name: '{{table_name}}',
+        columns: [
+          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          { name: 'created_at', type: 'timestamp', default: 'now()' },
+          { name: 'updated_at', type: 'timestamp', default: 'now()' },
+        ],
+      }),
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropTable('{{table_name}}');
+  }
+}
+\`\`\`
+
+## Safety Checks
+
+-[ ] Migration is reversible
+-[ ] No data loss in down migration
+-[ ] Indexes added for foreign keys
+-[ ] Appropriate column constraints
+```
+
+### 3. API Documentation Skill
+
+```markdown
+---
+name: generate-api-docs
+description: Generate OpenAPI/Swagger documentation from code. Use when documenting APIs, creating API specs, or updating endpoint documentation.
+---
+
+# API Documentation Generator
+
+## Process
+
+1.Scan controller files for route decorators
+2.Extract DTOs for request/response schemas
+3.Generate OpenAPI 3.0 specification
+4.Include examples from test fixtures
+
+## Output
+
+-`openapi.yaml` - Full API specification
+-Inline JSDoc comments on controllers
+-Example request/response in docs
+```
+
+---
+
+### DevOps Engineer Examples
+
+### 1. Dockerfile Generator Skill
+
+```markdown
+---
+name: generate-dockerfile
+description: Generate optimized Dockerfiles for applications. Use when containerizing apps, creating Docker images, or setting up container builds.
+---
+
+# Dockerfile Generator
+
+## Analysis Steps
+
+1.Detect project type (Node, Python, Java, etc.)
+2.Identify dependency files (package.json, requirements.txt)
+3.Determine build commands
+4.Select appropriate base image
+
+## Node.js Template
+
+\`\`\`dockerfile
+# Build stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Production stage
+FROM node:20-alpine
+WORKDIR /app
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+COPY --from=builder /app/node_modules ./node_modules
+COPY --chown=nodejs:nodejs . .
+USER nodejs
+EXPOSE 3000
+CMD ["node", "dist/main.js"]
+\`\`\`
+
+## Best Practices Enforced
+
+-Multi-stage builds for smaller images
+-Non-root user for security
+-.dockerignore file generated
+-Health check included
+-Proper layer caching
+```
+
+### 2. CI/CD Pipeline Skill
+
+```markdown
+---
+name: generate-pipeline
+description: Generate CI/CD pipeline configurations for GitHub Actions, GitLab CI, or Jenkins. Use when setting up pipelines, automating deployments, or configuring CI/CD.
+---
+
+# CI/CD Pipeline Generator
+
+## Supported Platforms
+
+-GitHub Actions
+-GitLab CI
+-Azure DevOps
+-Jenkins
+
+## GitHub Actions Template
+
+\`\`\`yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -uses: actions/checkout@v4
+      -uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      -run: npm ci
+      -run: npm run lint
+      -run: npm run test -- --coverage
+      -run: npm run build
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      -uses: actions/checkout@v4
+      -name: Deploy to production
+        run: echo "Deploy steps here"
+\`\`\`
+
+## Pipeline Stages
+
+1.**Lint** - Code quality checks
+2.**Test** - Unit and integration tests
+3.**Build** - Compile/bundle application
+4.**Security** - Vulnerability scanning
+5.**Deploy** - Environment deployment
+```
+
+### 3. Kubernetes Manifest Skill
+
+```markdown
+---
+name: generate-k8s-manifests
+description: Generate Kubernetes deployment manifests. Use when deploying to Kubernetes, creating K8s configs, or setting up container orchestration.
+---
+
+# Kubernetes Manifest Generator
+
+## Generated Resources
+
+-Deployment
+-Service
+-ConfigMap
+-Secret (template)
+-Ingress
+-HorizontalPodAutoscaler
+
+## Deployment Template
+
+\`\`\`yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{app-name}}
+  labels:
+    app: {{app-name}}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{app-name}}
+  template:
+    metadata:
+      labels:
+        app: {{app-name}}
+    spec:
+      containers:
+        -name: {{app-name}}
+          image: {{image}}:{{tag}}
+          ports:
+            -containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+\`\`\`
+```
+
+---
+
+### QA/Tester Examples
+
+### 1. Unit Test Generator Skill
+
+```markdown
+---
+name: write-jest-unit-test
+description: Generate Jest unit tests for components and services based on branch changes. Use when writing tests, creating specs, or testing new features.
+---
+
+# Unit Test Generator
+
+## Workflow
+
+1.Identify changed files: `git diff --name-only`
+2.For each file, determine type (component/service/pipe)
+3.Read source and identify testable methods
+4.Generate spec file with:
+   -Happy path tests
+   -Edge case tests
+   -Error scenario tests
+
+## Test Pattern
+
+\`\`\`typescript
+describe('ComponentName', () => {
+  describe('#methodName', () => {
+    it('should [expected] when [condition]', () => {
+      // Arrange
+      // Act
+      // Assert
+    });
+  });
+});
+\`\`\`
+```
+
+### 2. E2E Test Scenario Skill
+
+```markdown
+---
+name: generate-e2e-tests
+description: Generate end-to-end test scenarios using Playwright or Cypress. Use when creating E2E tests, user journey tests, or integration tests.
+---
+
+# E2E Test Generator
+
+## Input
+
+-User story or feature description
+-Key user flows to test
+
+## Output
+
+Playwright test file with:
+-Page object model
+-Test scenarios
+-Assertions
+
+## Playwright Template
+
+\`\`\`typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('Feature: {{feature-name}}', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+  });
+
+  test('should {{scenario-description}}', async ({ page }) => {
+    // Arrange
+    await page.getByRole('button', { name: 'Login' }).click();
+
+    // Act
+    await page.getByLabel('Email').fill('user@example.com');
+    await page.getByLabel('Password').fill('password');
+    await page.getByRole('button', { name: 'Submit' }).click();
+
+    // Assert
+    await expect(page.getByText('Welcome')).toBeVisible();
+  });
+});
+\`\`\`
+```
+
+### 3. Test Data Generator Skill
+
+```markdown
+---
+name: generate-test-data
+description: Generate realistic test data and fixtures. Use when creating mock data, test fixtures, or seed data for testing.
+---
+
+# Test Data Generator
+
+## Supported Formats
+
+-JSON fixtures
+-TypeScript factories
+-SQL seed scripts
+-CSV files
+
+## Factory Pattern
+
+\`\`\`typescript
+import { faker } from '@faker-js/faker';
+
+export const createUser = (overrides?: Partial<User>): User => ({
+  id: faker.string.uuid(),
+  email: faker.internet.email(),
+  firstName: faker.person.firstName(),
+  lastName: faker.person.lastName(),
+  createdAt: faker.date.past(),
+  ...overrides,
+});
+
+export const createUsers = (count: number): User[] =>
+  Array.from({ length: count }, () => createUser());
+\`\`\`
+
+## Data Types
+
+| Type | Generator |
+|------|-----------|
+| UUID | `faker.string.uuid()` |
+| Email | `faker.internet.email()` |
+| Name | `faker.person.fullName()` |
+| Date | `faker.date.past()` |
+| Number | `faker.number.int({ min, max })` |
+| Address | `faker.location.streetAddress()` |
+```
+
+### 4. API Test Generator Skill
+
+```markdown
+---
+name: generate-api-tests
+description: Generate API integration tests for REST endpoints. Use when testing APIs, creating contract tests, or validating endpoints.
+---
+
+# API Test Generator
+
+## Test Coverage
+
+-Response status codes
+-Response schema validation
+-Authentication scenarios
+-Error handling
+-Rate limiting
+
+## Test Template
+
+\`\`\`typescript
+describe('GET /api/users', () => {
+  it('should return 200 with user list', async () => {
+    const response = await request(app)
+      .get('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      data: expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(String),
+          email: expect.any(String),
+        }),
+      ]),
+    });
+  });
+
+  it('should return 401 without auth token', async () => {
+    await request(app)
+      .get('/api/users')
+      .expect(401);
+  });
+});
+\`\`\`
+```
+
+---
+
+## Best Practices
+
+### Do’s
+
+| Practice | Why |
+| --- | --- |
+| Be specific in descriptions | Helps AI match the right skill |
+| Include concrete examples | AI learns from examples |
+| Use checklists for multi-step tasks | Ensures completeness |
+| Keep SKILL.md under 500 lines | Faster processing |
+| Test your skill before sharing | Catch issues early |
+
+### Don’ts
+
+| Anti-Pattern | Alternative |
+| --- | --- |
+| Vague skill names like “helper” | Use descriptive names like “generate-api-tests” |
+| Hardcoded paths | Use relative paths or variables |
+| Too many options | Provide a default with escape hatch |
+| Time-sensitive instructions | Use “current” or “deprecated” sections |
+
+---
+
+## Troubleshooting
+
+### Skill Not Being Triggered
+
+1. **Check description** - Does it include trigger words the user might say?
+2. **Check location** - Is the skill in `.cursor/skills/` or `~/.cursor/skills/`?
+3. **Check syntax** - Valid YAML frontmatter with `name` and `description`?
+
+### Skill Produces Wrong Output
+
+1. **Add more examples** - AI learns better from examples
+2. **Be more explicit** - Don’t assume AI knows your conventions
+3. **Add validation steps** - Include commands to verify output
+
+### Skill Takes Too Long
+
+1. **Reduce scope** - Break into smaller skills
+2. **Use reference files** - Move details to separate files
+3. **Cache lookups** - Don’t re-read files unnecessarily
+
+---
+
+## Quick Reference
+
+### Create a Skill
+
+```bash
+mkdir -p .cursor/skills/my-skill
+```
+
+### Minimum SKILL.md
+
+```markdown
+---
+name: my-skill
+description: What it does. Use when [triggers].
+---
+
+# My Skill
+
+## Instructions
+
+1.Step one
+2.Step two
+```
+
+### Trigger a Skill
+
+```
+"Use my-skill to do X"
+# or just describe the task naturally
+```
+
+---
+
+## Getting Help
+
+- Review existing skills in `.cursor/skills/` for patterns
+- Check Cursor documentation for updates
+- Ask Cursor: “How do I create a skill for X?”
